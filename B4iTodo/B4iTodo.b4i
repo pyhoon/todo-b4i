@@ -1,0 +1,244 @@
+﻿Build1=Default,my.b4i.todo
+File1=ListItem.bil
+File2=Main.bil
+FileGroup1=Default Group
+FileGroup2=Default Group
+Group=Default Group
+Library1=icore
+Library2=xui views
+Library3=isql
+Library4=irandomaccessfile
+Library5=ixui
+Library6=iencryption
+Library7=ihud
+Module1=KeyValueStore
+NumberOfFiles=2
+NumberOfLibraries=7
+NumberOfModules=1
+Version=6.5
+@EndOfDesignText@
+'Code module
+#Region  Project Attributes 
+	#ApplicationLabel: B4iTodo
+	#Version: 1.0.0 
+	'Orientation possible values: Portrait, LandscapeLeft, LandscapeRight and PortraitUpsideDown
+	#iPhoneOrientations: Portrait, LandscapeLeft, LandscapeRight
+	#iPadOrientations: Portrait, LandscapeLeft, LandscapeRight, PortraitUpsideDown
+	#Target: iPhone, iPad
+	#ATSEnabled: True
+	#MinVersion: 8
+#End Region
+#Region Certificates
+	#CertificateFile: ios_development.cer
+	#ProvisionFile: development.mobileprovision
+#End Region
+Sub Process_Globals
+	Public App As Application
+	Public NavControl As NavigationController
+	Public kvs As KeyValueStore
+	Private HUD As HUD
+	Private MainPage As Page
+	Private XUI As XUI
+	Private CLV As CustomListView
+	Private LblEdit As Label
+	Private LblText As Label
+	Private LblCheck As Label
+	Private PnlCheck As Panel
+	Private TxtTodo As TextField
+	Private PnlItem As Panel
+	Private PnlEdit As Panel
+	Private BtnAdd As Button
+	Private LblCount As Label
+	Private LblTitleDialog As Label
+	Private LblDelete As Label
+	Dim Const WHITE As Int = Colors.White
+	'Dim const LIMEGREEN As Int = 0xFFADFF2F
+	Dim Const LIGHTGRAY As Int = 0xFFF0F0F0
+	Dim ID As Int
+End Sub
+
+Private Sub Application_Start (Nav As NavigationController)
+	'SetDebugAutoFlushLogs(True) 'Uncomment if program crashes before all logs are printed.
+	NavControl = Nav
+	MainPage.Initialize("MainPage")
+	MainPage.RootPanel.LoadLayout("Main")
+	NavControl.ShowPage(MainPage)
+	NavControl.NavigationBarVisible = False
+	
+	kvs.Initialize(File.DirDocuments, "data")
+	
+	Wait For (kvs.GetMapAsync(Array("MapData"))) Complete (MapData As Map)
+	'Log(MapData)
+	If MapData.IsInitialized Then
+		Dim ListTodo As List = MapData.Get("MapData")
+		If ListTodo.IsInitialized Then
+			For Each MapTodo As Map In ListTodo
+				CLV.Add(CreateListItem(MapTodo.Get("txt"), MapTodo.Get("chk"), CLV.AsView.Width, 70dip), MapTodo.Get("id"))
+			Next
+		End If
+	End If
+	ID = CLV.Size
+	LblCount.Text = "Items: " & CLV.Size
+End Sub
+
+Private Sub Page1_Resize(Width As Int, Height As Int)
+	
+End Sub
+
+Private Sub Application_Background
+	
+End Sub
+
+Sub SaveTodo As ResumableSub
+	'kvs.Remove("MapData")
+	Dim ListTodo As List
+	ListTodo.Initialize
+	
+	For i = 0 To CLV.Size - 1
+		Dim pnl As B4XView = CLV.GetPanel(i)
+		Dim pan As B4XView = pnl.GetView(0)		' PnlItem
+		Dim chk As B4XView = pan.GetView(0)		' PnlCheck
+		Dim lbl As B4XView = chk.GetView(0)		' LblCheck
+		Dim txt As Label = pan.GetView(1)		' LblText
+
+		Dim MapTodo As Map = CreateMap("id": i, "chk": lbl.Visible, "txt": txt.Text)
+		ListTodo.Add(MapTodo)
+	Next
+	'Log(ListTodo)
+	'kvs.Put("MapData", ListTodo)
+	Dim MapData As Map = CreateMap("MapData":ListTodo)
+	Wait For (kvs.PutMapAsync(MapData)) Complete (Success As Boolean)
+	'Log("Success: " & Success)
+	Return Success
+End Sub
+
+Sub CreateListItem(Text As String, Checked As Boolean, Width As Int, Height As Int) As Panel
+	Dim p As B4XView = XUI.CreatePanel("")
+	p.SetLayoutAnimated(0, 0, 0, Width, Height)
+	p.LoadLayout("ListItem")
+		
+	LblCheck.Visible = Checked
+	If Checked Then
+		Dim cs As CSBuilder
+		cs.Initialize
+		cs.Strikethrough.Append(Text).PopAll
+		LblText.AttributedText = cs
+		PnlItem.Color = LIGHTGRAY ' Colors.ARGB(255, 240, 240, 240)
+		'LblCheck.Color = LIMEGREEN ' Colors.ARGB(255, 173, 255, 47)
+	Else
+		LblText.Text =  Text
+		PnlItem.Color = WHITE
+		'LblCheck.Color = WHITE
+	End If
+	Return p
+End Sub
+
+'Sub CLV_ItemClick (Index As Int, Value As Object)
+'	
+'End Sub
+
+Sub BtnAdd_Click
+	LblTitleDialog.Text = "  N E W   I T E M"
+	TxtTodo.Text = ""
+	TxtTodo.RequestFocus
+	LblDelete.Visible = False
+	PnlEdit.Visible = True
+	BtnAdd.Visible = False
+End Sub
+
+Sub PnlCheck_Click
+	Dim index As Int = CLV.GetItemFromView(Sender)
+	ID = index
+	Dim pnl As B4XView = CLV.GetPanel(ID) ' ListItem
+	Dim pan As B4XView = pnl.GetView(0)		' PnlItem
+	Dim chk As B4XView = pan.GetView(0)		' PnlCheck
+	Dim lbl As B4XView = chk.GetView(0)		' LblCheck
+	Dim txt As Label = pan.GetView(1)		' LblText
+
+	Dim cs As CSBuilder
+	cs.Initialize
+	
+	lbl.Visible = Not(lbl.Visible)
+	If lbl.Visible Then			
+		pan.Color = LIGHTGRAY ' Colors.ARGB(255, 240, 240, 240)
+		chk.Color = LIGHTGRAY ' Colors.ARGB(255, 240, 240, 240)
+		'lbl.Color = LIMEGREEN ' Colors.ARGB(255, 173, 255, 47)
+		cs.Strikethrough.Append(txt.Text).PopAll
+	Else		
+		pan.Color = WHITE
+		chk.Color = WHITE
+		'lbl.Color = WHITE
+		cs.Append(txt.Text).PopAll
+	End If
+	txt.AttributedText = cs
+	ID = index
+	Wait For (SaveTodo) Complete (Success As Boolean)
+	If Success = False Then
+		HUD.ToastMessageShow("Error: Saving data", False)
+	End If
+End Sub
+
+Sub LblEdit_Click
+	Dim index As Int = CLV.GetItemFromView(Sender)	
+	Dim pnl As B4XView = CLV.GetPanel(index) ' ListItem
+	Dim pan As B4XView = pnl.GetView(0)		' PnlItem
+	Dim lbl As B4XView = pan.GetView(1)		' LblText
+	LblTitleDialog.Text = "  E D I T   I T E M"
+	TxtTodo.Text = lbl.Text
+	LblDelete.Visible = True
+	PnlEdit.Visible = True
+	BtnAdd.Visible = False
+	TxtTodo.RequestFocus
+	TxtTodo.SelectionStart = TxtTodo.Text.Length
+	ID = index
+End Sub
+
+Sub LblDelete_Click
+	'XUI.MsgboxAsync("ID: " & ID, "DELETE")
+	If ID <> CLV.Size Then
+		CLV.RemoveAt(ID)
+	End If
+	Wait For (SaveTodo) Complete (Success As Boolean)
+	If Success Then
+		TxtTodo.ResignFocus
+		PnlEdit.Visible = False
+		BtnAdd.Visible = True
+		LblCount.Text = "Items: " & CLV.Size
+	Else
+		HUD.ToastMessageShow("Error: Saving data", False)
+	End If
+End Sub
+
+Sub LblYes_Click
+	If LblTitleDialog.Text = "  E D I T   I T E M" Then
+		Dim pnl As B4XView = CLV.GetPanel(ID)	' ListItem
+		Dim pan As B4XView = pnl.GetView(0)		' PnlItem
+		Dim lbl As B4XView = pan.GetView(1)		' LblText
+		If TxtTodo.Text.Trim = "" Then TxtTodo.Text = $"Item #${ID + 1}"$
+		lbl.Text = TxtTodo.Text
+	Else
+		ID = CLV.Size
+		If TxtTodo.Text.Trim = "" Then TxtTodo.Text = $"Item #${ID + 1}"$
+		CLV.Add(CreateListItem(TxtTodo.Text, False, CLV.AsView.Width, 70dip), ID)
+	End If
+	Wait For (SaveTodo) Complete (Success As Boolean)
+	If Success Then
+		TxtTodo.ResignFocus
+		PnlEdit.Visible = False
+		BtnAdd.Visible = True
+		'XUI.MsgboxAsync("ID: " & ID, "SAVE")		
+		LblCount.Text = "Items: " & CLV.Size
+	Else
+		HUD.ToastMessageShow("Error: Saving data", False)
+	End If
+End Sub
+
+Sub LblNo_Click
+	TxtTodo.ResignFocus
+	PnlEdit.Visible = False
+	BtnAdd.Visible = True	
+End Sub
+
+Sub NoScroll_Click
+	
+End Sub
