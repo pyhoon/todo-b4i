@@ -105,10 +105,8 @@ Sub SaveTodo As ResumableSub
 		ListTodo.Add(MapTodo)
 	Next
 	'Log(ListTodo)
-	'kvs.Put("MapData", ListTodo)
 	Dim MapData As Map = CreateMap("MapData":ListTodo)
 	Wait For (kvs.PutMapAsync(MapData)) Complete (Success As Boolean)
-	'Log("Success: " & Success)
 	Return Success
 End Sub
 
@@ -123,8 +121,8 @@ Sub CreateListItem(Text As String, Checked As Boolean, Width As Int, Height As I
 		cs.Initialize
 		cs.Strikethrough.Append(Text).PopAll
 		LblText.AttributedText = cs
-		PnlItem.Color = LIGHTGRAY ' Colors.ARGB(255, 240, 240, 240)
-		'LblCheck.Color = LIMEGREEN ' Colors.ARGB(255, 173, 255, 47)
+		PnlItem.Color = LIGHTGRAY
+		'LblCheck.Color = LIMEGREEN
 	Else
 		LblText.Text =  Text
 		PnlItem.Color = WHITE
@@ -160,9 +158,9 @@ Sub PnlCheck_Click
 	
 	lbl.Visible = Not(lbl.Visible)
 	If lbl.Visible Then			
-		pan.Color = LIGHTGRAY ' Colors.ARGB(255, 240, 240, 240)
-		chk.Color = LIGHTGRAY ' Colors.ARGB(255, 240, 240, 240)
-		'lbl.Color = LIMEGREEN ' Colors.ARGB(255, 173, 255, 47)
+		pan.Color = LIGHTGRAY
+		chk.Color = LIGHTGRAY
+		'lbl.Color = LIMEGREEN
 		cs.Strikethrough.Append(txt.Text).PopAll
 	Else		
 		pan.Color = WHITE
@@ -183,6 +181,7 @@ Sub LblEdit_Click
 	Dim pnl As B4XView = CLV.GetPanel(index) ' ListItem
 	Dim pan As B4XView = pnl.GetView(0)		' PnlItem
 	Dim lbl As B4XView = pan.GetView(1)		' LblText
+	
 	LblTitleDialog.Text = "  E D I T   I T E M"
 	TxtTodo.Text = lbl.Text
 	LblDelete.Visible = True
@@ -210,16 +209,36 @@ Sub LblDelete_Click
 End Sub
 
 Sub LblYes_Click
+	Dim str As String
 	If LblTitleDialog.Text = "  E D I T   I T E M" Then
 		Dim pnl As B4XView = CLV.GetPanel(ID)	' ListItem
-		Dim pan As B4XView = pnl.GetView(0)		' PnlItem
-		Dim lbl As B4XView = pan.GetView(1)		' LblText
-		If TxtTodo.Text.Trim = "" Then TxtTodo.Text = $"Item #${ID + 1}"$
-		lbl.Text = TxtTodo.Text
+		Dim pan As B4XView = pnl.GetView(0)		' PnlItem		
+		Dim chk As B4XView = pan.GetView(0)		' PnlCheck
+		Dim lbl As B4XView = chk.GetView(0)		' LblCheck
+		Dim txt As B4XView = pan.GetView(1)		' LblText
+		
+		Dim cs As CSBuilder		
+		cs.Initialize
+		
+		If TxtTodo.Text.Trim = "" Then
+			str = $"Item #${ID + 1}"$
+		Else
+			str = TxtTodo.Text.Trim
+		End If
+		If lbl.Visible Then
+			cs.Strikethrough.Append(str).PopAll
+		Else
+			cs.Append(str).PopAll
+		End If
+		txt.Text = cs
 	Else
 		ID = CLV.Size
-		If TxtTodo.Text.Trim = "" Then TxtTodo.Text = $"Item #${ID + 1}"$
-		CLV.Add(CreateListItem(TxtTodo.Text, False, CLV.AsView.Width, 70dip), ID)
+		If TxtTodo.Text.Trim = "" Then
+			str = $"Item #${ID + 1}"$
+		Else
+			str = TxtTodo.Text.Trim
+		End If
+		CLV.Add(CreateListItem(str, False, CLV.AsView.Width, 70dip), ID)
 	End If
 	Wait For (SaveTodo) Complete (Success As Boolean)
 	If Success Then
