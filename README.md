@@ -3,8 +3,4 @@ A nice Todo List iOS app created using B4i
 
 **Preview:**
 
-![Main](https://github.com/pyhoon/todo-b4i/blob/master/Preview/1.png)
-
-![New Item](https://github.com/pyhoon/todo-b4i/blob/master/Preview/2.png)
-
-![Edit Item](https://github.com/pyhoon/todo-b4i/blob/master/Preview/3.png)
+<img src="https://github.com/pyhoon/todo-b4i/blob/master/Preview/1.png" width="140" title="Main" /> <img src="https://github.com/pyhoon/todo-b4i/blob/master/Preview/2.png" width="140" title="New Item" /> <img src="https://github.com/pyhoon/todo-b4i/blob/master/Preview/3.png" width="140" title="Edit Item" />
