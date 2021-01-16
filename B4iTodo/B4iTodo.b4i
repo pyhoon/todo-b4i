@@ -215,7 +215,7 @@ Sub LblYes_Click
 		Dim pan As B4XView = pnl.GetView(0)		' PnlItem		
 		Dim chk As B4XView = pan.GetView(0)		' PnlCheck
 		Dim lbl As B4XView = chk.GetView(0)		' LblCheck
-		Dim txt As B4XView = pan.GetView(1)		' LblText
+		Dim txt As Label = pan.GetView(1)		' LblText
 		
 		Dim cs As CSBuilder		
 		cs.Initialize
@@ -230,7 +230,9 @@ Sub LblYes_Click
 		Else
 			cs.Append(str).PopAll
 		End If
-		txt.Text = cs
+		'txt.Text = cs
+		' https://www.b4x.com/android/forum/threads/csbuilder-attributedstrings-builder.79153/#content
+		txt.AttributedText = cs
 	Else
 		ID = CLV.Size
 		If TxtTodo.Text.Trim = "" Then
